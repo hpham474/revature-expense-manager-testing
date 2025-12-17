@@ -54,7 +54,7 @@ def test_submit_expense_empty_description_returns_exception(expense_service_test
 #EU-024
 def test_submit_expense_returns_expense(expense_service_test, mock_expense_repo):
     #Arrange
-    expense = expense_service_test.submit_expense(1, 1.0, "test", "date")
+    expense = Expense(1, 1, 1.0, "test", "date")
     mock_expense_repo.create.return_value = expense
 
     #Act
@@ -118,6 +118,39 @@ def test_get_expense_by_id_returns_None(expense_service_test, mock_expense_repo)
 
     #Act
     result = expense_service_test.get_expense_by_id(1,1)
+
+    #Assert
+    assert result is None
+
+#========================================================================================================
+# GET EXPENSE WITH STATUS TESTS
+#========================================================================================================
+#EU-029
+def test_get_expense_with_status_returns_tuple(expense_service_test, mock_approval_repo, mock_expense_repo):
+    #Arrange
+    expense_id = 1
+    user_id = 1
+    expense = Expense(1, 1, 1.0, 'test', 'date')
+    approval = Approval(1, 1, 'pending', None, None, None)
+
+    mock_approval_repo.find_by_expense_id.return_value = approval
+    mock_expense_repo.find_by_id.return_value = expense
+
+    #Act
+    result = expense_service_test.get_expense_with_status(expense_id, user_id)
+
+    #Assert
+    assert result is not None
+
+#EU-030
+def test_get_expense_with_status_returns_None(expense_service_test, mock_approval_repo, mock_expense_repo):
+
+    #Arrange
+    mock_approval_repo.find_by_expense_id.return_value = None
+    mock_expense_repo.find_by_id.return_value = None
+
+    #Act
+    result = expense_service_test.get_expense_with_status(1, 1)
 
     #Assert
     assert result is None
