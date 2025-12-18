@@ -167,4 +167,89 @@ class TestExpenseRepository:
             (userIdInput,))
         assert len(actualExpenseList) == 0
 
+    def test_update_expense_positive(self, setUp):
+        # Arrange
+        # setUp[0] = mock_db, setUp[1] = mock_conn,
+        # setUp[2] = mock_cursor, setUp[3] = expenseRepo
+        setUp[0].get_connection.return_value.__enter__.return_value = setUp[1]
+        newExpense = Expense(5, 1, 79.32, "printer supplies", "2025-12-17")
+        # Act
+        actualExpense = setUp[3].update(newExpense)
+        # Assert
+        setUp[1].execute.assert_called_once_with(
+            "UPDATE expenses SET amount = ?, description = ?, date = ? WHERE id = ?",
+            (newExpense.amount, newExpense.description, newExpense.date, newExpense.id)
+        )
+        setUp[1].commit.assert_called_once()
+        assert newExpense == actualExpense
 
+    def test_update_expense_null(self, setUp):
+        # Arrange
+        # setUp[0] = mock_db, setUp[1] = mock_conn,
+        # setUp[2] = mock_cursor, setUp[3] = expenseRepo
+        setUp[0].get_connection.return_value.__enter__.return_value = setUp[1]
+        newExpense = None
+        # Act
+        with pytest.raises(AttributeError) as ex:
+            actualExpense = setUp[3].update(newExpense)
+            assert str(ex) == "'NoneType' object has no attribute 'amount'"
+
+    @pytest.mark.parametrize("idInput, userIdInput, amountInput, descInput, dateInput", [
+        (None, 1, 79.32, "printer supplies", "2025-12-17"),
+        (5, None, 79.32, "printer supplies", "2025-12-17"),
+        (5, 1, None, "printer supplies", "2025-12-17"),
+        (5, 1, 79.32, None, "2025-12-17"),
+        (5, 1, 79.32, "printer supplies", None),
+    ])
+    def test_update_expense_null_attributes(self, setUp, idInput, userIdInput, amountInput, descInput, dateInput):
+        # Arrange
+        # setUp[0] = mock_db, setUp[1] = mock_conn,
+        # setUp[2] = mock_cursor, setUp[3] = expenseRepo
+        setUp[0].get_connection.return_value.__enter__.return_value = setUp[1]
+        newExpense = Expense(idInput, userIdInput, amountInput, descInput, dateInput)
+        # Act
+        actualExpense = setUp[3].update(newExpense)
+        # Assert
+        setUp[1].commit.assert_called_once_with()
+        assert actualExpense == newExpense
+
+    def test_delete_positive(self, setUp):
+        # Arrange
+        # setUp[0] = mock_db, setUp[1] = mock_conn,
+        # setUp[2] = mock_cursor, setUp[3] = expenseRepo
+        setUp[0].get_connection.return_value.__enter__.return_value = setUp[1]
+        setUp[1].execute.return_value = setUp[2]
+        setUp[2].rowcount = 1
+        expectedCalls = [
+            call("DELETE FROM approvals WHERE expense_id = ?", (5,)),
+            call("DELETE FROM expenses WHERE id = ?", (5,))
+        ]
+        # Act
+        result = setUp[3].delete(5)
+        # Assert
+        setUp[1].execute.assert_has_calls(expectedCalls, any_order=False)
+        setUp[1].commit.assert_called_once()
+        assert result == True
+
+    @pytest.mark.parametrize("idInput",[
+        (-49),
+        (83918479),
+        (None)
+    ])
+    def test_delete_negative(self, setUp, idInput):
+        # Arrange
+        # setUp[0] = mock_db, setUp[1] = mock_conn,
+        # setUp[2] = mock_cursor, setUp[3] = expenseRepo
+        setUp[0].get_connection.return_value.__enter__.return_value = setUp[1]
+        setUp[1].execute.return_value = setUp[2]
+        setUp[2].rowcount = 0
+        expectedCalls = [
+            call("DELETE FROM approvals WHERE expense_id = ?", (idInput,)),
+            call("DELETE FROM expenses WHERE id = ?", (idInput,))
+        ]
+        # Act
+        result = setUp[3].delete(idInput)
+        # Assert
+        setUp[1].execute.assert_has_calls(expectedCalls, any_order=False)
+        setUp[1].commit.assert_called_once()
+        assert result == False
