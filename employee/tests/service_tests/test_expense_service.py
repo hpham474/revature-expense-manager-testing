@@ -242,6 +242,7 @@ def test_update_expense_empty_description_returns_exception(expense_service_test
 #========================================================================================================
 # DELETE EXPENSE TESTS
 #========================================================================================================
+#EU-036
 def test_delete_expense_returns_true(expense_service_test, mock_expense_repo):
     #Arrange
     expense = Expense(1, 1, 1.0, 'test', 'date')
@@ -259,6 +260,7 @@ def test_delete_expense_returns_true(expense_service_test, mock_expense_repo):
     'denied',
     'approved',
 ])
+#EU-037
 def test_delete_expense_returns_exception_if_status_not_pending(expense_service_test, status):
     #Arrange
     expense = Expense(1, 1, 1.0, 'test', 'date')
@@ -272,6 +274,7 @@ def test_delete_expense_returns_exception_if_status_not_pending(expense_service_
             # Assert
             assert result == ValueError
 
+#EU-038
 def test_delete_expense_returns_false(expense_service_test):
 
     #Arrange
@@ -281,3 +284,38 @@ def test_delete_expense_returns_false(expense_service_test):
 
         # Assert
         assert result == False
+
+#========================================================================================================
+# GET EXPENSE HISTORY TESTS
+#========================================================================================================
+@pytest.mark.parametrize("status", [
+    'denied',
+    'approved',
+    'pending',
+])
+#EU-039
+def test_get_expense_history_returns_list(expense_service_test, status):
+    #Arrange
+    expense = Expense(1, 1, 1.0, 'test', 'date')
+    approval = Approval(1, 1, status, None, None, None)
+
+    with patch("service.expense_service.ExpenseService.get_user_expenses_with_status",
+               return_value = [(expense, approval)]):
+
+        #Act
+        result = expense_service_test.get_expense_history(1,status)
+
+        #Assert
+        assert len(result) > 0
+
+#EU-040
+def test_get_expense_history_returns_empty_list(expense_service_test):
+    #Arrange
+    with patch("service.expense_service.ExpenseService.get_user_expenses_with_status",
+               return_value = []):
+
+        #Act
+        result = expense_service_test.get_expense_history(1, "pending")
+
+        #Assert
+        assert len(result) == 0
