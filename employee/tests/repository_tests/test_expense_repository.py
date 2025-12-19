@@ -62,7 +62,6 @@ class TestExpenseRepository:
         (5, 1, 95.49, None, "2025-12-17"),
         (5, 1, 95.49, "printer supplies", None)
     ])
-
     def test_create_expense_null_attributes(self, setUp, idInput, userIdInput, amountInput, descInput, dateInput):
         # Arrange
         # setUp[0] = mock_db, setUp[1] = mock_conn,
