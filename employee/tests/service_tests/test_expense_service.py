@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from repository import ExpenseRepository, Expense, ApprovalRepository, Approval
-from service import ExpenseService
+from src.repository import ExpenseRepository, Expense, ApprovalRepository, Approval
+from src.service import ExpenseService
 
 #Expense Repository mock
 @pytest.fixture(scope="module")
@@ -167,7 +167,7 @@ def test_update_expense_returns_expense(expense_service_test, mock_expense_repo)
     result = None
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
         result = expense_service_test.update_expense(1, 1, 1.0, 'test', 'date')
 
     #Assert
@@ -180,7 +180,7 @@ def test_update_expense_returns_none(expense_service_test, mock_expense_repo):
     result = None
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = None):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = None):
         result = expense_service_test.update_expense(1, 1, 1.0, 'test', 'date')
 
     #Assert
@@ -197,7 +197,7 @@ def test_update_expense_not_pending_returns_exception(expense_service_test, mock
     approval = Approval(1, 1, status, None, None, None)
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
         with pytest.raises(ValueError, match="Cannot edit expense that has been reviewed"):
             result = expense_service_test.update_expense(1, 1, 1.0, 'test', 'date')
 
@@ -216,7 +216,7 @@ def test_update_expense_negative_amount_returns_exception(expense_service_test, 
     approval = Approval(1, 1, 'pending', None, None, None)
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
         with pytest.raises(ValueError, match="Amount must be greater than 0"):
             result = expense_service_test.update_expense(1, 1, amount, 'test', 'date')
 
@@ -231,7 +231,7 @@ def test_update_expense_empty_description_returns_exception(expense_service_test
     approval = Approval(1, 1, 'pending', None, None, None)
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
         with pytest.raises(ValueError, match="Description is required"):
             result = expense_service_test.update_expense(1, 1, 1.0, "", 'date')
 
@@ -250,7 +250,7 @@ def test_delete_expense_returns_true(expense_service_test, mock_expense_repo):
     mock_expense_repo.delete.return_value = True
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
             result = expense_service_test.delete_expense(1,1)
 
             # Assert
@@ -267,7 +267,7 @@ def test_delete_expense_returns_exception_if_status_not_pending(expense_service_
     approval = Approval(1, 1, status, None, None, None)
 
     #Act
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = (expense, approval)):
         with pytest.raises(ValueError):
             result = expense_service_test.delete_expense(1,1)
 
@@ -278,7 +278,7 @@ def test_delete_expense_returns_exception_if_status_not_pending(expense_service_
 def test_delete_expense_returns_false(expense_service_test):
 
     #Arrange
-    with patch("service.expense_service.ExpenseService.get_expense_with_status", return_value = None):
+    with patch("src.service.expense_service.ExpenseService.get_expense_with_status", return_value = None):
         #Act
         result = expense_service_test.delete_expense(1, 1)
 
@@ -299,7 +299,7 @@ def test_get_expense_history_returns_list(expense_service_test, status):
     expense = Expense(1, 1, 1.0, 'test', 'date')
     approval = Approval(1, 1, status, None, None, None)
 
-    with patch("service.expense_service.ExpenseService.get_user_expenses_with_status",
+    with patch("src.service.expense_service.ExpenseService.get_user_expenses_with_status",
                return_value = [(expense, approval)]):
 
         #Act
@@ -311,7 +311,7 @@ def test_get_expense_history_returns_list(expense_service_test, status):
 #EU-040
 def test_get_expense_history_returns_empty_list(expense_service_test):
     #Arrange
-    with patch("service.expense_service.ExpenseService.get_user_expenses_with_status",
+    with patch("src.service.expense_service.ExpenseService.get_user_expenses_with_status",
                return_value = []):
 
         #Act
