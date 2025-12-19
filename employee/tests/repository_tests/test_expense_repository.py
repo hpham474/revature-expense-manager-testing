@@ -1,6 +1,5 @@
 import pytest
-from pytest_mock import mocker
-from repository import expense_repository, Expense, ExpenseRepository
+from src.repository import Expense, ExpenseRepository
 from unittest.mock import call
 
 @pytest.fixture

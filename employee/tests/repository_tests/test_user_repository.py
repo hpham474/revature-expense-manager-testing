@@ -1,6 +1,6 @@
 import pytest
-from pytest_mock import mocker
-from repository import user_repository, User, UserRepository, DatabaseConnection
+from src.repository import User, UserRepository
+
 
 @pytest.fixture
 def setUp(mocker):
