@@ -1,26 +1,25 @@
 import importlib
-
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
 from src.repository import User, Expense
+from src.api import auth
+import src.api.expense_controller as expense_controller
 
 @pytest.fixture
 def app(monkeypatch):
-  from src.api import auth
-  from src.api import expense_controller
   def identity_decorator(fn):
-      return fn
+    return fn
 
   # mock require_employee_auth from auth
   monkeypatch.setattr(auth, "require_employee_auth", identity_decorator)
 
   # reload imports
-  expense_controller = importlib.reload(expense_controller)
+  expense_controller_module = importlib.reload(expense_controller)
 
   app = Flask(__name__)
   app.testing = True
-  app.register_blueprint(expense_controller.expense_bp)
+  app.register_blueprint(expense_controller_module.expense_bp)
 
   return app
 
@@ -29,8 +28,6 @@ def client(app):
     return app.test_client()
 
 def test_submit_expense(client, app, monkeypatch):
-  import src.api.expense_controller as expense_controller
-
   # sample data
   fake_user = User(1, "test_user", "test_pass", "Employee")
   fake_expense = Expense(101, 1, 100.1, "test_description", "2025-12-19")
