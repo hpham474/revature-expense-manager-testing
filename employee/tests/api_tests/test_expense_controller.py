@@ -3,12 +3,12 @@ import importlib
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
-from repository import User, Expense
+from src.repository import User, Expense
 
 @pytest.fixture
 def app(monkeypatch):
-  from api import auth
-  from api import expense_controller
+  from src.api import auth
+  from src.api import expense_controller
   def identity_decorator(fn):
       return fn
 
@@ -29,7 +29,7 @@ def client(app):
     return app.test_client()
 
 def test_submit_expense(client, app, monkeypatch):
-  import api.expense_controller as expense_controller
+  import src.api.expense_controller as expense_controller
 
   # sample data
   fake_user = User(1, "test_user", "test_pass", "Employee")
