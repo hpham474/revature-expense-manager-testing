@@ -317,3 +317,108 @@ def test_get_expense_exception_404(client, app, monkeypatch):
   response = client.get(f"{BASE_ROUTE}/101")
 
   assert response.status_code == 500
+
+@pytest.mark.parametrize(
+  "json, expected_amount, expected_description, expected_date",
+  [
+    (
+      {"amount": 100.1, "description": "Lunch", "date": "2025-12-19"},
+      100.1,
+      "Lunch",
+      "2025-12-19",
+    ),
+    (
+      {"amount": 50, "description": "Taxi", "date": "2025-12-19"},
+      50,
+      "Taxi",
+      "2025-12-19",
+    ),
+    (
+      {"amount": "75.25", "description": "Hotel", "date": "2025-12-19"},
+      75.25,
+      "Hotel",
+      "2025-12-19",
+    ),
+    (
+      {"amount": 0.01, "description": "Coffee", "date": "2025-12-19"},
+      0.01,
+      "Coffee",
+      "2025-12-19",
+    ),
+  ],
+)
+def test_update_expense_positive_inputs_200(client, app, monkeypatch, json, expected_amount, expected_description, expected_date):
+  fake_expense = Expense(
+    101,
+    1,
+    expected_amount,
+    expected_description,
+    expected_date
+  )
+
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.update_expense.return_value = fake_expense
+  app.expense_service = mock_service
+
+  response = client.put(f"{BASE_ROUTE}/{fake_expense.id}", json=json)
+  assert response.status_code == 200
+  mock_service.update_expense.assert_called_once_with(
+    expense_id=fake_expense.id,
+    user_id=1,
+    amount=expected_amount,
+    description=expected_description,
+    date=expected_date
+  )
+  assert response.json["message"] == "Expense updated successfully"
+  assert response.json["expense"]["amount"] == fake_expense.amount
+  assert response.json["expense"]["description"] == fake_expense.description
+  assert response.json["expense"]["date"] == fake_expense.date
+
+@pytest.mark.parametrize(
+  "json, status_code, error_description",
+  [
+    ({}, 400, "JSON data required"),
+    ({"amount" : 10, "description": "lunch"}, 400, "Amount, description, and date are required"),
+    ({"amount" : 10, "date": "2025-12-20"}, 400, "Amount, description, and date are required"),
+    ({"description" : "lunch", "date" : "2025-12-20"}, 400, "Amount, description, and date are required"),
+    ({"amount" : 10}, 400, "Amount, description, and date are required"),
+    ({"description" : "lunch", "date" : None}, 400, "Amount, description, and date are required"),
+    ({"amount" : "abc", "description": "lunch", "date" : "2025-12-20"}, 400, "Amount must be a valid number"),
+  ],
+)
+def test_update_expense_negative_inputs_error(client, app, monkeypatch, json, status_code, error_description):
+  app.expense_service = MagicMock()
+
+  response = client.put(f"{BASE_ROUTE}/101", json=json)
+
+  assert response.status_code == status_code
+  assert response.get_json()["error"] == error_description
+
+@pytest.mark.parametrize(
+  "exception, status_code",
+  [
+    (ValueError(), 400),
+    (Exception(), 500),
+  ]
+)
+def test_update_expense_exception_error(client, app, monkeypatch, exception, status_code):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.update_expense.side_effect = exception
+  app.expense_service = mock_service
+
+  response = client.put(f"{BASE_ROUTE}/101", json={
+    "amount": 1, "description": "sample", "date": "2025-12-19"
+  })
+  assert response.status_code == status_code
