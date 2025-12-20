@@ -113,6 +113,7 @@ def test_submit_expense_negative_inputs_errors(client, app, monkeypatch, json, s
 
   assert response.status_code == status_code
   assert response.get_json()["error"] == error_description
+  app.expense_service.submit_expense.assert_not_called()
 
 @pytest.mark.parametrize(
   "exception, status_code",
@@ -137,6 +138,13 @@ def test_submit_expense_exception_error(client, app, monkeypatch, exception, sta
     "amount": 1, "description": "sample", "date": "2025-12-19"
   })
   assert response.status_code == status_code
+  mock_service.submit_expense.assert_called_once_with(
+    user_id=FAKE_USER.id,
+    amount=1,
+    description="sample",
+    date="2025-12-19"
+  )
+
 
 @pytest.mark.parametrize(
   "status, expense_approval, expected_count",
@@ -251,6 +259,11 @@ def test_get_expense_list_exception_500(client, app, monkeypatch):
 
   response = client.get(f"{BASE_ROUTE}")
   assert response.status_code == 500
+  mock_service.get_expense_history.assert_called_once_with(
+    user_id=FAKE_USER.id,
+    status_filter=None
+  )
+
 
 @pytest.mark.parametrize(
   "expense_approval",
@@ -302,8 +315,12 @@ def test_get_expense_negative_404(client, app, monkeypatch):
   response = client.get(f"{BASE_ROUTE}/404")
 
   assert response.status_code == 404
+  mock_service.get_expense_with_status.assert_called_once_with(
+    404,
+    FAKE_USER.id
+  )
 
-def test_get_expense_exception_404(client, app, monkeypatch):
+def test_get_expense_exception_500(client, app, monkeypatch):
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
@@ -317,6 +334,10 @@ def test_get_expense_exception_404(client, app, monkeypatch):
   response = client.get(f"{BASE_ROUTE}/101")
 
   assert response.status_code == 500
+  mock_service.get_expense_with_status.assert_called_once_with(
+    101,
+    FAKE_USER.id
+  )
 
 @pytest.mark.parametrize(
   "json, expected_amount, expected_description, expected_date",
@@ -399,6 +420,7 @@ def test_update_expense_negative_inputs_error(client, app, monkeypatch, json, st
 
   assert response.status_code == status_code
   assert response.get_json()["error"] == error_description
+  app.expense_service.update_expense.assert_not_called()
 
 @pytest.mark.parametrize(
   "exception, status_code",
@@ -422,3 +444,80 @@ def test_update_expense_exception_error(client, app, monkeypatch, exception, sta
     "amount": 1, "description": "sample", "date": "2025-12-19"
   })
   assert response.status_code == status_code
+  mock_service.update_expense.assert_called_once_with(
+    expense_id=101,
+    user_id=FAKE_USER.id,
+    amount=1,
+    description="sample",
+    date="2025-12-19"
+  )
+
+def test_delete_expense_positive_200(client, app, monkeypatch):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.delete_expense.return_value = True
+  app.expense_service = mock_service
+
+  response = client.delete(f"{BASE_ROUTE}/101")
+  assert response.status_code == 200
+
+  data = response.get_json()
+  assert data["message"] == "Expense deleted successfully"
+
+  mock_service.delete_expense.assert_called_once_with(
+    101,
+    FAKE_USER.id
+  )
+
+def test_delete_expense_negative_404(client, app, monkeypatch):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.delete_expense.return_value = False
+  app.expense_service = mock_service
+
+  response = client.delete(f"{BASE_ROUTE}/101")
+  assert response.status_code == 404
+
+  data = response.get_json()
+  assert data["error"] == "Expense not found"
+
+  mock_service.delete_expense.assert_called_once_with(
+    101,
+    FAKE_USER.id
+  )
+
+@pytest.mark.parametrize(
+  "exception, status_code",
+  [
+    (ValueError(), 400),
+    (Exception(), 500),
+  ]
+)
+def test_delete_expense_exceptions_error(client, app, monkeypatch, exception, status_code):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.delete_expense.side_effect = exception
+  app.expense_service = mock_service
+
+  response = client.delete(f"{BASE_ROUTE}/101")
+  assert response.status_code == status_code
+
+  mock_service.delete_expense.assert_called_once_with(
+    101,
+    FAKE_USER.id
+  )
