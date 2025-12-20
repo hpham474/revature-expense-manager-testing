@@ -7,6 +7,7 @@ from src.api import auth
 import src.api.expense_controller as expense_controller
 
 BASE_ROUTE = "/api/expenses"
+FAKE_USER = User(1, "test_user", "test_pass", "Employee")
 
 @pytest.fixture
 def app(monkeypatch):
@@ -60,7 +61,6 @@ def client(app):
 )
 def test_submit_expense_positive_inputs_201_expense(client, app, monkeypatch, json, expected_amount, expected_description, expected_date):
   # sample data
-  fake_user = User(1, "test_user", "test_pass", "Employee")
   fake_expense = Expense(
     101,
     1,
@@ -73,7 +73,7 @@ def test_submit_expense_positive_inputs_201_expense(client, app, monkeypatch, js
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
-    lambda: fake_user
+    lambda: FAKE_USER
   )
 
   # Mock ExpenseService
@@ -122,13 +122,11 @@ def test_submit_expense_negative_inputs_errors(client, app, monkeypatch, json, s
   ]
 )
 def test_submit_expense_exception_error(client, app, monkeypatch, exception, status_code):
-  fake_user = User(1, "test_user", "test_pass", "Employee")
-
   # Mock authenticated user
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
-    lambda: fake_user
+    lambda: FAKE_USER
   )
 
   mock_service = MagicMock()
@@ -167,12 +165,10 @@ def test_submit_expense_exception_error(client, app, monkeypatch, exception, sta
   ],
 )
 def test_get_expense_list_different_statuses_filtered(client, app,  monkeypatch, status, expense_approval, expected_count):
-  fake_user = User(1, "test_user", "test_pass", "Employee")
-
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
-    lambda: fake_user
+    lambda: FAKE_USER
   )
 
   mock_service = MagicMock()
@@ -213,12 +209,10 @@ def test_get_expense_list_different_statuses_filtered(client, app,  monkeypatch,
   ],
 )
 def test_get_expense_list_different_sizes(client, app, monkeypatch, expense_approval, expected_count):
-  fake_user = User(1, "test_user", "test_pass", "Employee")
-
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
-    lambda: fake_user
+    lambda: FAKE_USER
   )
 
   mock_service = MagicMock()
@@ -244,13 +238,11 @@ def test_get_expense_list_different_sizes(client, app, monkeypatch, expense_appr
   )
 
 def test_get_expense_list_exception_500(client, app, monkeypatch):
-  fake_user = User(1, "test_user", "test_pass", "Employee")
-
   # Mock authenticated user
   monkeypatch.setattr(
     expense_controller,
     "get_current_user",
-    lambda: fake_user
+    lambda: FAKE_USER
   )
 
   mock_service = MagicMock()
@@ -258,4 +250,70 @@ def test_get_expense_list_exception_500(client, app, monkeypatch):
   app.expense_service = mock_service
 
   response = client.get(f"{BASE_ROUTE}")
+  assert response.status_code == 500
+
+@pytest.mark.parametrize(
+  "expense_approval",
+  [
+    (Expense(101, 1, 100.1, "Lunch", "2025-12-19"), Approval(101, 101, "pending", None, None, None)),
+    (Expense(102, 1, 100.1, "Lunch", "2025-12-19"), Approval(101, 102, "approved", 2, "approval comment", "2025-12-20")),
+    (Expense(103, 1, 100.1, "Lunch", "2025-12-19"), Approval(101, 103, "denied", 2, "denial comment", "2025-12-20"))
+  ]
+)
+def test_get_expense(client, app, monkeypatch, expense_approval):
+  fake_expense, fake_approval = expense_approval
+
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_with_status.return_value = (fake_expense, fake_approval)
+  app.expense_service = mock_service
+
+  response = client.get(f"{BASE_ROUTE}/{fake_expense.id}")
+
+  assert response.status_code == 200
+
+  data = response.get_json()
+  assert data["expense"]["id"] == fake_expense.id
+  assert data["expense"]["status"] == fake_approval.status
+  assert data["expense"]["amount"] == fake_expense.amount
+  assert data["expense"]["description"] == fake_expense.description
+  assert data["expense"]["date"] == fake_expense.date
+  mock_service.get_expense_with_status.assert_called_once_with(
+    fake_expense.id,
+    FAKE_USER.id
+  )
+
+def test_get_expense_negative_404(client, app, monkeypatch):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_with_status.return_value = None
+  app.expense_service = mock_service
+
+  response = client.get(f"{BASE_ROUTE}/404")
+
+  assert response.status_code == 404
+
+def test_get_expense_exception_404(client, app, monkeypatch):
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: FAKE_USER
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_with_status.side_effect = Exception
+  app.expense_service = mock_service
+
+  response = client.get(f"{BASE_ROUTE}/101")
+
   assert response.status_code == 500
