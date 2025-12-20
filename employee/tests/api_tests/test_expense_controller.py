@@ -2,9 +2,11 @@ import importlib
 import pytest
 from flask import Flask
 from unittest.mock import MagicMock
-from src.repository import User, Expense
+from src.repository import User, Expense, Approval
 from src.api import auth
 import src.api.expense_controller as expense_controller
+
+BASE_ROUTE = "/api/expenses"
 
 @pytest.fixture
 def app(monkeypatch):
@@ -79,7 +81,7 @@ def test_submit_expense_positive_inputs_201_expense(client, app, monkeypatch, js
   mock_service.submit_expense.return_value = fake_expense
   app.expense_service = mock_service
 
-  response = client.post("/api/expenses", json=json)
+  response = client.post(BASE_ROUTE, json=json)
 
   assert response.status_code == 201
   mock_service.submit_expense.assert_called_once_with(
@@ -107,7 +109,7 @@ def test_submit_expense_negative_inputs_errors(client, app, monkeypatch, json, s
   # Mock ExpenseService
   app.expense_service = MagicMock()
 
-  response = client.post("/api/expenses", json=json)
+  response = client.post(BASE_ROUTE, json=json)
 
   assert response.status_code == status_code
   assert response.get_json()["error"] == error_description
@@ -133,7 +135,127 @@ def test_submit_expense_exception_error(client, app, monkeypatch, exception, sta
   mock_service.submit_expense.side_effect = exception
   app.expense_service = mock_service
 
-  response = client.post("/api/expenses", json={
+  response = client.post(BASE_ROUTE, json={
     "amount": 1, "description": "sample", "date": "2025-12-19"
   })
   assert response.status_code == status_code
+
+@pytest.mark.parametrize(
+  "status, expense_approval, expected_count",
+  [
+    (
+      "pending",
+      [
+        (Expense(101, 1, 100.1, "Lunch", "2025-12-19"), Approval(1, 101, "pending", None, None, None))
+      ],
+      1
+    ),
+    (
+      "approved",
+      [
+        (Expense(101, 1, 100.1, "Lunch", "2025-12-19"), Approval(1, 101, "approved", 2, "approval comment", "2025-12-20"))
+      ],
+      1
+    ),
+    (
+      "denied",
+      [
+        (Expense(101, 1, 100.1, "Lunch", "2025-12-19"), Approval(1, 101, "denied", 2, "denial comment", "2025-12-20"))
+      ],
+      1
+    ),
+  ],
+)
+def test_get_expense_list_different_statuses_filtered(client, app,  monkeypatch, status, expense_approval, expected_count):
+  fake_user = User(1, "test_user", "test_pass", "Employee")
+
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: fake_user
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_history.return_value = expense_approval
+
+  app.expense_service = mock_service
+
+  query = f"?status={status}" if status else ""
+  response = client.get(f"{BASE_ROUTE}{query}")
+
+  assert response.status_code == 200
+
+  data = response.get_json()
+  expense, approval = expense_approval[0]
+  assert data["count"] == expected_count
+  assert data["expenses"][0]["id"] == 101
+  assert data["expenses"][0]["status"] == approval.status
+
+  mock_service.get_expense_history.assert_called_once_with(
+    user_id=1,
+    status_filter=status
+  )
+
+@pytest.mark.parametrize(
+  "expense_approval, expected_count",
+  [
+    (
+      [],
+      0
+    ),
+    (
+      [
+        (Expense(101, 1, 100.1, "Lunch 1", "2025-12-19"), Approval(1, 101, "approved", 2, "approval comment", "2025-12-20")),
+        (Expense(102, 1, 100.1, "Lunch 2", "2025-12-19"), Approval(1, 102, "denied", 2, "denial comment", "2025-12-20"))
+      ],
+      2
+    ),
+  ],
+)
+def test_get_expense_list_different_sizes(client, app, monkeypatch, expense_approval, expected_count):
+  fake_user = User(1, "test_user", "test_pass", "Employee")
+
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: fake_user
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_history.return_value = expense_approval
+
+  app.expense_service = mock_service
+
+  response = client.get(f"{BASE_ROUTE}")
+
+  assert response.status_code == 200
+
+  data = response.get_json()
+  assert data["count"] == expected_count
+
+  for i, (expense, approval) in enumerate(expense_approval):
+    individual_data = data["expenses"][i]
+    assert individual_data["id"] == expense.id
+    assert individual_data["status"] == approval.status
+
+  mock_service.get_expense_history.assert_called_once_with(
+    user_id=1,
+    status_filter=None
+  )
+
+def test_get_expense_list_exception_500(client, app, monkeypatch):
+  fake_user = User(1, "test_user", "test_pass", "Employee")
+
+  # Mock authenticated user
+  monkeypatch.setattr(
+    expense_controller,
+    "get_current_user",
+    lambda: fake_user
+  )
+
+  mock_service = MagicMock()
+  mock_service.get_expense_history.side_effect = Exception
+  app.expense_service = mock_service
+
+  response = client.get(f"{BASE_ROUTE}")
+  assert response.status_code == 500
