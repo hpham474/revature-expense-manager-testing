@@ -2,13 +2,13 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from contextlib import contextmanager
 
-import sys
+#import sys
 import os
-from repository import approval_model, approval_repository, database, DatabaseConnection
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from repository.approval_repository import ApprovalRepository
-from repository.approval_model import Approval
-from repository.database import DatabaseConnection
+from src.repository import approval_model, approval_repository, database, DatabaseConnection
+#sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from src.repository.approval_repository import ApprovalRepository
+from src.repository.approval_model import Approval
+from src.repository.database import DatabaseConnection
 
 @pytest.fixture
 def mock_db_connection():
