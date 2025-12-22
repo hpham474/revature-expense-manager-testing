@@ -153,5 +153,47 @@ public class TestExpenseRepository {
         assertFalse(result.isEmpty());
     }
 
+    /****************************************************************************************************
+     * FIND EXPENSES BY USER TESTS                                                                                 *
+     ****************************************************************************************************/
+    @Test
+    @DisplayName("Test findExpensesByUser Throws Exception")
+    public void testFindExpensesByUser_Exception() throws SQLException {
+        // Arrange
+        int userId = 1;
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
+
+        // Act + Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> expenseRepo.findExpensesByUser(userId)
+        );
+
+        assertTrue(exception.getMessage().contains("Error finding expenses for user: " + userId));
+        assertNotNull(exception.getCause());
+        assertInstanceOf(SQLException.class, exception.getCause());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByUser returns Empty List")
+    public void testFindExpensesByUser_emptyList() throws SQLException {
+        //Arrange
+        int userId = 1;
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByUser(userId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByUser Positive")
+    public void testFindExpensesByUser_positive(){
+
+    }
 
 }
