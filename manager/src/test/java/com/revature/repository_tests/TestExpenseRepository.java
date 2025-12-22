@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +52,7 @@ public class TestExpenseRepository {
      ****************************************************************************************************/
 
     @Test
-    @DisplayName("Test findById throws RuntimeException")
+    @DisplayName("Test findById Throws Exception")
     public void testFindById_databaseException() throws Exception {
         int expenseId = 1;
 
@@ -103,7 +104,7 @@ public class TestExpenseRepository {
     }
 
     /****************************************************************************************************
-     * FIND PENDING EXPENSES WITH USERS TESTS                                                                                 *
+     * FIND PENDING EXPENSES WITH USERS TESTS                                                           *
      ****************************************************************************************************/
 
     @Test
@@ -154,7 +155,7 @@ public class TestExpenseRepository {
     }
 
     /****************************************************************************************************
-     * FIND EXPENSES BY USER TESTS                                                                                 *
+     * FIND EXPENSES BY USER TESTS                                                                      *
      ****************************************************************************************************/
     @Test
     @DisplayName("Test findExpensesByUser Throws Exception")
@@ -192,8 +193,176 @@ public class TestExpenseRepository {
 
     @Test
     @DisplayName("Test findExpensesByUser Positive")
-    public void testFindExpensesByUser_positive(){
+    public void testFindExpensesByUser_Positive() throws SQLException {
+        //Arrange
+        int userId = 1;
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false);
 
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByUser(userId);
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
+    /****************************************************************************************************
+     * FIND EXPENSES BY DATE RANGE TESTS                                                                *
+     ****************************************************************************************************/
+    @Test
+    @DisplayName("Test findExpensesByDateRange Throws Exception")
+    public void testFindExpensesByDateRange_Exception() throws SQLException {
+        // Arrange
+        String startDate = "01/01/2025";
+        String endDate = "01/01/2025";
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
+
+        // Act + Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> expenseRepo.findExpensesByDateRange(startDate, endDate)
+        );
+
+        assertTrue(exception.getMessage().contains("Error finding expenses by date range: " + startDate + " to " + endDate));
+        assertNotNull(exception.getCause());
+        assertInstanceOf(SQLException.class, exception.getCause());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByDateRange returns EmptyList")
+    public void testFindExpensesByDateRange_emptyList() throws SQLException {
+        // Arrange
+        String startDate = "01/01/2025";
+        String endDate = "01/01/2025";
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByDateRange(startDate, endDate);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByDateRange Positive")
+    public void testFindExpensesByDateRange_positive() throws SQLException {
+        //Arrange
+        String startDate = "01/01/2025";
+        String endDate = "01/09/2025";
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false);
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByDateRange(startDate, endDate);
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+    }
+
+    /****************************************************************************************************
+     * FIND EXPENSES BY CATEGORY TESTS                                                                  *
+     ****************************************************************************************************/
+    @Test
+    @DisplayName("Test findExpensesByCategory Throws Exception")
+    public void testFindExpensesByCategory_Exception() throws SQLException {
+        // Arrange
+        String category = "test";
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
+
+        // Act + Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> expenseRepo.findExpensesByCategory(category)
+        );
+
+        assertTrue(exception.getMessage().contains("Error finding expenses by category: " + category));
+        assertNotNull(exception.getCause());
+        assertInstanceOf(SQLException.class, exception.getCause());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByCategory returns EmptyList")
+    public void testFindExpensesByCategory_emptyList() throws SQLException {
+        // Arrange
+        String category = "test";
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByCategory(category);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test findExpensesByCategory Positive")
+    public void testFindExpensesByCategory_Positive() throws SQLException {
+        // Arrange
+        String category = "test";
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findExpensesByCategory(category);
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+    }
+
+    /****************************************************************************************************
+     * FIND ALL EXPENSES WITH USERS TESTS                                                                  *
+     ****************************************************************************************************/
+    @Test
+    @DisplayName("Test findAllExpensesWithUsers Throws Exception")
+    public void testFindAllExpensesWithUsers_Exception() throws SQLException {
+        // Arrange
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
+
+        // Act + Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> expenseRepo.findAllExpensesWithUsers()
+        );
+
+        assertTrue(exception.getMessage().contains("Error finding all expenses"));
+        assertNotNull(exception.getCause());
+        assertInstanceOf(SQLException.class, exception.getCause());
+    }
+
+    @Test
+    @DisplayName("Test findAllExpensesWithUsers returns EmptyList")
+    public void testFindAllExpensesWithUsers_emptyList() throws SQLException {
+        // Arrange
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findAllExpensesWithUsers();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test findAllExpensesWithUsers Positive")
+    public void testFindAllExpensesWithUsers_Positive() throws SQLException {
+        // Arrange
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findAllExpensesWithUsers();
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+    }
 }
