@@ -3,6 +3,7 @@ package com.revature.repository_tests;
 import com.revature.repository.DatabaseConnection;
 import com.revature.repository.Expense;
 import com.revature.repository.ExpenseRepository;
+import com.revature.repository.ExpenseWithUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,6 +100,57 @@ public class TestExpenseRepository {
         // Assert
         assertNotNull(result);
         assertTrue(result.isPresent());
+    }
+
+    /****************************************************************************************************
+     * FIND PENDING EXPENSES WITH USERS TESTS                                                                                 *
+     ****************************************************************************************************/
+
+    @Test
+    @DisplayName("Test findPendingExpensesWithUsers throws RuntimeException")
+    public void testFindPendingExpensesWithUsers_throwsException() throws SQLException {
+        // Arrange
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
+
+        // Act + Assert
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> expenseRepo.findPendingExpensesWithUsers()
+        );
+
+        assertTrue(exception.getMessage().contains("Error finding pending expenses"));
+        assertNotNull(exception.getCause());
+        assertInstanceOf(SQLException.class, exception.getCause());
+    }
+
+    @Test
+    @DisplayName("Test findPendingExpensesWithUsers returns Empty List")
+    public void testFindPendingExpensesWithUsers_emptyList() throws SQLException {
+        //Arrange
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false); // No rows found
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findPendingExpensesWithUsers();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test findPendingExpensesWithUsers Positive")
+    public void testFindPendingExpensesWithUsers_Positive() throws SQLException {
+        //Arrange
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false);
+
+        // Act
+        List<ExpenseWithUser> result = expenseRepo.findPendingExpensesWithUsers();
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
     }
 
 
