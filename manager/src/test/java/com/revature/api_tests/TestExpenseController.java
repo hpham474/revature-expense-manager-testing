@@ -5,6 +5,7 @@ import com.revature.api.ExpenseController;
 import com.revature.repository.ExpenseWithUser;
 import com.revature.repository.User;
 import com.revature.service.ExpenseService;
+import groovy.transform.Internal;
 import io.javalin.http.Context;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
@@ -141,25 +142,58 @@ public class TestExpenseController {
     @DisplayName("Test approve expense, expense not found")
     @Test
     public void testApproveExpense_ExpenseNotFound(){
+        //Arrange
+        int expenseId = 123456789;
+        when(ctx.pathParamAsClass("expenseId", Integer.class)).thenReturn(intValidator);
+        when(intValidator.get()).thenReturn(expenseId);
+        User manager = new User();
+        when(AuthenticationMiddleware.getAuthenticatedManager(ctx)).thenReturn(manager);
+        when(expenseService.approveExpense(expenseId, manager.getId(), null)).thenReturn(false);
+        //Act
+        NotFoundResponse ex = assertThrows(NotFoundResponse.class, ()->expenseController.approveExpense(ctx));
+        //Assert
+        assertEquals("Expense not found or could not be approved", ex.getMessage());
 
     }
 
     @DisplayName("Test approve expense, number format exception for expense id")
     @Test
     public void testApproveExpense_NumberFormatException(){
-
+        //Arrange
+        when(ctx.pathParamAsClass("expenseId", Integer.class)).thenReturn(intValidator);
+        when(intValidator.get()).thenThrow(NumberFormatException.class);
+        //Act/Assert
+        BadRequestResponse ex = assertThrows(BadRequestResponse.class, ()->expenseController.approveExpense(ctx));
+        assertEquals("Invalid expense ID format", ex.getMessage());
     }
 
     @DisplayName("Test approve expense, get authenticate manager returns null value")
     @Test
     public void testApproveExpense_GetAuthenticateManagerFailure(){
-
+        //Arrange
+        int expenseId = 3;
+        when(ctx.pathParamAsClass("expenseId", Integer.class)).thenReturn(intValidator);
+        when(intValidator.get()).thenReturn(expenseId);
+        when(AuthenticationMiddleware.getAuthenticatedManager(ctx)).thenReturn(null);
+        //Act/Arrange
+        InternalServerErrorResponse ex = assertThrows(InternalServerErrorResponse.class, ()->expenseController.approveExpense(ctx));
+        assertTrue(ex.getMessage().contains("Failed to approve expense: "));
     }
 
     @DisplayName("Test approve expense, error during ctx.json")
     @Test
     public void testApproveExpense_jsonError(){
-
+        //Arrange
+        int expenseId = 3;
+        when(ctx.pathParamAsClass("expenseId", Integer.class)).thenReturn(intValidator);
+        when(intValidator.get()).thenReturn(expenseId);
+        User manager = new User(1, "manager1", "password123", "Manager");
+        when(AuthenticationMiddleware.getAuthenticatedManager(ctx)).thenReturn(manager);
+        when(expenseService.approveExpense(expenseId, manager.getId(), null)).thenReturn(true);
+        when(ctx.json(any())).thenThrow(InternalServerErrorResponse.class);
+        //Act/Assert
+        InternalServerErrorResponse ex = assertThrows(InternalServerErrorResponse.class, ()->expenseController.approveExpense(ctx));
+        assertTrue(ex.getMessage().contains("Failed to approve expense: "));
     }
 
 
