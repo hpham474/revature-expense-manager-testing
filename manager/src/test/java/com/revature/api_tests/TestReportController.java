@@ -32,6 +32,7 @@ public class TestReportController {
     @InjectMocks
     private ReportController reportController;
 
+    // MU-142
     @DisplayName("Test generateAllExpenseReport Happy Path")
     @Test
     public void testGenerateAllExpensesReport_positive() {
@@ -54,6 +55,7 @@ public class TestReportController {
         verify(ctx).result(csvContent);
     }
 
+    // MU-143
     @DisplayName("Test generateAllExpensesReport Sad Path")
     @Test
     public void testGenerateAllExpenseReport_negative() {
@@ -66,6 +68,7 @@ public class TestReportController {
         assertThrows(InternalServerErrorResponse.class, () -> reportController.generateAllExpensesReport(ctx));
     }
 
+    // MU-144
     @DisplayName("Test generateEmployeeExpensesReport Happy Path")
     @Test
     public void testGenerateEmployeeExpensesReport_positive() {
@@ -88,6 +91,7 @@ public class TestReportController {
         verify(ctx).result(csvContent);
     }
 
+    // MU-145
     @DisplayName("Test generateEmployeeExpensesReport Sad Path - BadRequestResponse")
     @Test
     public void testGenerateEmployeeExpensesReport_badRequest() {
@@ -105,6 +109,7 @@ public class TestReportController {
         assertEquals("Invalid employee ID format", exception.getMessage());
     }
 
+    // MU-146
     @DisplayName("Test generateEmployeeExpensesReport Sad Path - InternalServerErrorResponse")
     @Test
     public void testGenerateEmployeeExpensesReport_internalServerError() {
@@ -122,6 +127,7 @@ public class TestReportController {
         assertTrue(exception.getMessage().contains("Failed to generate employee expenses report"));
     }
 
+    // MU-147
     @DisplayName("Test generateCategoryExpensesReport Happy Path")
     @Test
     public void testGenerateCategoryExpensesReport_positive() {
@@ -143,6 +149,7 @@ public class TestReportController {
         verify(ctx).result(csvContent);
     }
 
+    // MU-148
     @DisplayName("Test generateCategoryExpensesReport Sad Path - BadRequestResponse")
     @Test
     public void testGenerateCategoryExpensesReport_badRequest() {
@@ -156,6 +163,7 @@ public class TestReportController {
         assertEquals("Category parameter is required", exception.getMessage());
     }
 
+    // MU-149
     @DisplayName("Test generateCategoryExpensesReport Sad Path - InternalServerErrorResponse")
     @Test
     public void testGenerateCategoryExpensesReport_internalServerError() {
@@ -169,6 +177,7 @@ public class TestReportController {
         assertTrue(exception.getMessage().contains("Failed to generate category expenses report"));
     }
 
+    // MU-150
     @DisplayName("Test generateDateRangeExpensesReport Happy Path")
     @Test
     public void testGenerateDateRangeExpensesReport_positive() {
@@ -191,6 +200,7 @@ public class TestReportController {
         verify(ctx).result(csvContent);
     }
 
+    // MU-151
     @DisplayName("Test generateDateRangeExpensesReport Sad Path - BadRequestResponse Due to Null Values")
     @Test
     public void testGenerateDateRangeExpensesReport_badRequest_nullVals() {
@@ -205,6 +215,7 @@ public class TestReportController {
         assertEquals("Both startDate and endDate query parameters are required (format: YYYY-MM-DD)",  exception.getMessage());
     }
 
+    // MU-152
     @DisplayName("Test generateDateRangeExpensesReport Sad Path - BadRequestResponse Due to Invalid Date Format")
     @Test
     public void testGenerateDateRangeExpensesReport_badRequest_invalidFormat() {
@@ -219,6 +230,7 @@ public class TestReportController {
         assertEquals("Invalid date format. Use YYYY-MM-DD format", exception.getMessage());
     }
 
+    // MU-153
     @DisplayName("Test generateDateRangeExpensesReport Sad Path - InternalServerErrorResponse")
     @Test
     public void testGenerateDateRangeExpensesReport_internalServerError() {
@@ -232,6 +244,7 @@ public class TestReportController {
         assertTrue(exception.getMessage().contains("Failed to generate date range expenses report"));
     }
 
+    // MU-154
     @DisplayName("Test generatePendingExpensesReport Happy Path")
     @Test
     public void testGeneratePendingExpensesReport_positive() {
@@ -251,6 +264,7 @@ public class TestReportController {
         verify(ctx).result(csvContent);
     }
 
+    // MU-155
     @DisplayName("Test generatePendingExpensesReport Sad Path")
     @Test
     public void testGeneratePendingExpensesReport_negative() {
