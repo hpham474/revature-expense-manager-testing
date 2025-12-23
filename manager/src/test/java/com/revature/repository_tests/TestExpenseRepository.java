@@ -21,7 +21,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +50,7 @@ public class TestExpenseRepository {
      * FIND BY ID TESTS                                                                                 *
      ****************************************************************************************************/
 
+    //MU-094
     @Test
     @DisplayName("Test findById Throws Exception")
     public void testFindById_databaseException() throws Exception {
@@ -70,6 +70,7 @@ public class TestExpenseRepository {
         assertInstanceOf(SQLException.class, exception.getCause());
     }
 
+    //MU-095
     @Test
     @DisplayName("Test findById returns empty result")
     public void testFindById_emptyResult() throws SQLException {
@@ -86,6 +87,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-096
     @Test
     @DisplayName("Test findById Positive")
     public void testFindById_Positive() throws SQLException {
@@ -107,8 +109,9 @@ public class TestExpenseRepository {
      * FIND PENDING EXPENSES WITH USERS TESTS                                                           *
      ****************************************************************************************************/
 
+    //MU-097
     @Test
-    @DisplayName("Test findPendingExpensesWithUsers throws RuntimeException")
+    @DisplayName("Test findPendingExpensesWithUsers Throws RuntimeException")
     public void testFindPendingExpensesWithUsers_throwsException() throws SQLException {
         // Arrange
         when(preparedStatement.executeQuery()).thenThrow(new SQLException("DB failure"));
@@ -124,6 +127,7 @@ public class TestExpenseRepository {
         assertInstanceOf(SQLException.class, exception.getCause());
     }
 
+    //MU-098
     @Test
     @DisplayName("Test findPendingExpensesWithUsers returns Empty List")
     public void testFindPendingExpensesWithUsers_emptyList() throws SQLException {
@@ -139,6 +143,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-099
     @Test
     @DisplayName("Test findPendingExpensesWithUsers Positive")
     public void testFindPendingExpensesWithUsers_Positive() throws SQLException {
@@ -157,6 +162,7 @@ public class TestExpenseRepository {
     /****************************************************************************************************
      * FIND EXPENSES BY USER TESTS                                                                      *
      ****************************************************************************************************/
+    //MU-100
     @Test
     @DisplayName("Test findExpensesByUser Throws Exception")
     public void testFindExpensesByUser_Exception() throws SQLException {
@@ -174,7 +180,7 @@ public class TestExpenseRepository {
         assertNotNull(exception.getCause());
         assertInstanceOf(SQLException.class, exception.getCause());
     }
-
+    //MU-101
     @Test
     @DisplayName("Test findExpensesByUser returns Empty List")
     public void testFindExpensesByUser_emptyList() throws SQLException {
@@ -191,6 +197,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-102
     @Test
     @DisplayName("Test findExpensesByUser Positive")
     public void testFindExpensesByUser_Positive() throws SQLException {
@@ -210,6 +217,7 @@ public class TestExpenseRepository {
     /****************************************************************************************************
      * FIND EXPENSES BY DATE RANGE TESTS                                                                *
      ****************************************************************************************************/
+    //MU-103
     @Test
     @DisplayName("Test findExpensesByDateRange Throws Exception")
     public void testFindExpensesByDateRange_Exception() throws SQLException {
@@ -229,6 +237,7 @@ public class TestExpenseRepository {
         assertInstanceOf(SQLException.class, exception.getCause());
     }
 
+    //MU-104
     @Test
     @DisplayName("Test findExpensesByDateRange returns EmptyList")
     public void testFindExpensesByDateRange_emptyList() throws SQLException {
@@ -246,6 +255,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-105
     @Test
     @DisplayName("Test findExpensesByDateRange Positive")
     public void testFindExpensesByDateRange_positive() throws SQLException {
@@ -266,6 +276,7 @@ public class TestExpenseRepository {
     /****************************************************************************************************
      * FIND EXPENSES BY CATEGORY TESTS                                                                  *
      ****************************************************************************************************/
+    //MU-106
     @Test
     @DisplayName("Test findExpensesByCategory Throws Exception")
     public void testFindExpensesByCategory_Exception() throws SQLException {
@@ -284,6 +295,7 @@ public class TestExpenseRepository {
         assertInstanceOf(SQLException.class, exception.getCause());
     }
 
+    //MU-107
     @Test
     @DisplayName("Test findExpensesByCategory returns EmptyList")
     public void testFindExpensesByCategory_emptyList() throws SQLException {
@@ -300,6 +312,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-108
     @Test
     @DisplayName("Test findExpensesByCategory Positive")
     public void testFindExpensesByCategory_Positive() throws SQLException {
@@ -319,6 +332,7 @@ public class TestExpenseRepository {
     /****************************************************************************************************
      * FIND ALL EXPENSES WITH USERS TESTS                                                                  *
      ****************************************************************************************************/
+    //MU-109
     @Test
     @DisplayName("Test findAllExpensesWithUsers Throws Exception")
     public void testFindAllExpensesWithUsers_Exception() throws SQLException {
@@ -336,6 +350,7 @@ public class TestExpenseRepository {
         assertInstanceOf(SQLException.class, exception.getCause());
     }
 
+    //MU-110
     @Test
     @DisplayName("Test findAllExpensesWithUsers returns EmptyList")
     public void testFindAllExpensesWithUsers_emptyList() throws SQLException {
@@ -351,6 +366,7 @@ public class TestExpenseRepository {
         assertTrue(result.isEmpty());
     }
 
+    //MU-111
     @Test
     @DisplayName("Test findAllExpensesWithUsers Positive")
     public void testFindAllExpensesWithUsers_Positive() throws SQLException {
