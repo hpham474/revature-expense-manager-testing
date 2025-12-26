@@ -1,4 +1,4 @@
-package com.revature.unit_test.api_tests;
+package com.revature.unit_tests.api_tests;
 
 import com.revature.api.AuthenticationMiddleware;
 import com.revature.repository.User;

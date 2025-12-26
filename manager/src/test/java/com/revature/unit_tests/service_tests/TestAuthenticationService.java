@@ -1,4 +1,4 @@
-package com.revature.unit_test.service_tests;
+package com.revature.unit_tests.service_tests;
 
 import com.revature.repository.User;
 import com.revature.repository.UserRepository;
@@ -6,12 +6,10 @@ import com.revature.service.AuthenticationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;

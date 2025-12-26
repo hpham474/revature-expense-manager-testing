@@ -1,4 +1,4 @@
-package com.revature.unit_test.repository_tests;
+package com.revature.unit_tests.repository_tests;
 
 import com.revature.repository.DatabaseConnection;
 import com.revature.repository.Expense;
