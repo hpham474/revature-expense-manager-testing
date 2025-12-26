@@ -1,4 +1,4 @@
-package com.revature.service_tests;
+package com.revature.unit_test.service_tests;
 
 import com.revature.repository.User;
 import com.revature.repository.UserRepository;

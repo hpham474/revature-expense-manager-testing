@@ -1,4 +1,4 @@
-package com.revature.integration_tests;
+package com.revature.unit_test.integration_tests;
 
 public class TestIntegration {
 }
