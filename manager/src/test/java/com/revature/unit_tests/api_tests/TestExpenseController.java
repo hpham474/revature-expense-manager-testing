@@ -1,19 +1,16 @@
-package com.revature.unit_test.api_tests;
+package com.revature.unit_tests.api_tests;
 
 import com.revature.api.AuthenticationMiddleware;
 import com.revature.api.ExpenseController;
 import com.revature.repository.ExpenseWithUser;
 import com.revature.repository.User;
 import com.revature.service.ExpenseService;
-import groovy.transform.Internal;
 import io.javalin.http.Context;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.http.InternalServerErrorResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,8 +19,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.javalin.validation.Validator;
-import java.net.ContentHandler;
-import java.sql.Array;
+
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
