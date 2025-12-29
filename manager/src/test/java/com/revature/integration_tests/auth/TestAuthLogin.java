@@ -21,6 +21,7 @@ public class TestAuthLogin {
         RestAssured.reset();
     }
 
+    //MI-221
     @Test
     @DisplayName("Test API: Manager Login Positive")
     void testAuthLogin_Positive(){
@@ -38,6 +39,7 @@ public class TestAuthLogin {
                 .statusCode(200);
     }
 
+    //MI-222
     @Test
     @DisplayName("Test API: Manager Login Invalid Login")
     void testAuthLogin_Negative(){

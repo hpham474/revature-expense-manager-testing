@@ -57,6 +57,7 @@ public class TestGetExpensesPending {
         RestAssured.reset();
     }
 
+    //MI-219
     @Test
     @DisplayName("Test API: Get Pending Expenses Positive")
     void testGetPendingExpensesPositive(){
@@ -71,6 +72,7 @@ public class TestGetExpensesPending {
                 .statusCode(200);
     }
 
+    //MI-220
     @Test
     @DisplayName("Test API: Get Pending Expenses Unauthorized Request")
     void getPendingExpenses_withoutJwt_shouldReturn401() {
