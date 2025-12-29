@@ -12,20 +12,42 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 
 public class TestGetExpensesPending {
 
     static RequestSpecification requestSpec;
     static ResponseSpecification responseSpec;
+    static String jwtCookie;
 
     @BeforeAll
     static void setup(){
-        RestAssured.baseURI = "http://localhost:5001/manager.html";
+        RestAssured.baseURI = "http://localhost";
+        RestAssured.port = 5001;
 
-        requestSpec = new RequestSpecBuilder().build();
+        String jwtCookie =
+                given()
+                        .contentType(ContentType.JSON)
+                        .body("""
+                      {
+                        "username": "manager1",
+                        "password": "password123"
+                      }
+                      """)
+                        .when()
+                        .post("/api/auth/login")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .cookie("jwt");
+
+        requestSpec = new RequestSpecBuilder()
+                .setContentType(ContentType.JSON)
+                .addCookie("jwt", jwtCookie)
+                .build();
 
         responseSpec = new ResponseSpecBuilder()
-                .expectContentType(ContentType.TEXT)
+                .expectContentType(ContentType.JSON)
                 .build();
     }
 
@@ -43,7 +65,22 @@ public class TestGetExpensesPending {
                 .get("/api/expenses/pending")
         .then()
                 .spec(responseSpec)
+                .contentType("application/json")
+                .body("data", notNullValue())
                 .statusCode(200);
     }
 
+    @Test
+    @DisplayName("Test Get Pending Expenses Unauthorized Request")
+    void getPendingExpenses_withoutJwt_shouldReturn401() {
+
+        given()
+                .baseUri("http://localhost")
+                .port(5001)
+        .when()
+                .get("/api/expenses/pending")
+        .then()
+                .statusCode(anyOf(is(401), is(403)))
+                .contentType("text/plain");
+    }
 }
