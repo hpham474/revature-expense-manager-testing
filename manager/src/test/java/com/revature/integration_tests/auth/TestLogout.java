@@ -16,6 +16,7 @@ public class TestLogout {
         RestAssured.port = 5001;
     }
 
+    // MI-212
     @Test
     void testLogout() {
         Response loginResponse =
