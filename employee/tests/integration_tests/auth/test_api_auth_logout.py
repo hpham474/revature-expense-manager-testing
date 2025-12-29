@@ -34,6 +34,7 @@ def authenticated_session(base_url):
     # Teardown
     session.post(f"{base_url}/api/auth/logout")
 
+#EI-217
 def test_api_logout_success(base_url, authenticated_session):
     """
     Authenticated user can log out successfully
@@ -48,6 +49,7 @@ def test_api_logout_success(base_url, authenticated_session):
     jwt_cookie = authenticated_session.cookies.get("jwt_token")
     assert jwt_cookie is None
 
+#EI-218
 def test_api_access_protected_endpoint_after_logout_fails(base_url, authenticated_session):
     # Logout
     logout_response = authenticated_session.post(

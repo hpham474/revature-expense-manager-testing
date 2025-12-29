@@ -60,7 +60,7 @@ def created_expense(base_url, authenticated_session):
 
     assert delete_response.status_code in (200, 204)
 
-#MI-215
+#EI-215
 def test_api_submit_new_expense_success(base_url, authenticated_session, created_expense):
 
     response = created_expense
@@ -81,7 +81,7 @@ def test_api_submit_new_expense_success(base_url, authenticated_session, created
     assert expense["status"].lower() == "pending"
     assert "id" in expense
 
-#MI-216
+#EI-216
 def test_api_submit_expense_without_auth_should_fail(base_url):
     expense_payload = {
         "amount": 50.00,
