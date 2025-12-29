@@ -25,6 +25,7 @@ public class TestGetExpensesPending {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 5001;
 
+        //Get JWT cookie authorization
         jwtCookie =
                 given()
                         .contentType(ContentType.JSON)
@@ -73,7 +74,6 @@ public class TestGetExpensesPending {
     @Test
     @DisplayName("Test API: Get Pending Expenses Unauthorized Request")
     void getPendingExpenses_withoutJwt_shouldReturn401() {
-
         given()
                 .baseUri("http://localhost")
                 .port(5001)
