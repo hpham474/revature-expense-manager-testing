@@ -1,37 +1,6 @@
 import requests, pytest
-from flask import Flask
-
-from src.api import expense_controller
-
 
 class Test_Get_Delete_Expenses:
-    @pytest.fixture
-    def app_and_client(self, mocker):
-        app = Flask(__name__)
-        app.config["TESTING"] = True
-
-        app.register_blueprint(expense_controller.expense_bp)
-
-        app.expense_service = mocker.Mock()
-
-        view = app.view_functions["expense.delete_expense"]
-        app.view_functions["expense.delete_expense"] = view.__wrapped__
-
-        client = app.test_client()
-        return app, client
-
-    @pytest.fixture(autouse=True)
-    def mock_auth(self, mocker):
-        mocker.patch(
-            "src.api.expense_controller.require_employee_auth",
-            lambda f: f
-        )
-
-        mocker.patch(
-            "src.api.expense_controller.get_current_user",
-            return_value=mocker.Mock(id=1)
-        )
-
     @pytest.fixture
     def setup(self):
         BASE_URL = "http://127.0.0.1:5000/api/expenses"
@@ -46,7 +15,9 @@ class Test_Get_Delete_Expenses:
             }
         )
 
-        return BASE_URL, session
+        yield BASE_URL, session
+
+        session.close()
 
     # EI-209
     def test_get_expenses(self, setup):
@@ -60,27 +31,37 @@ class Test_Get_Delete_Expenses:
         assert isinstance(data["expenses"], list)
 
     # EI-210
-    def test_delete_expense_positive(self, app_and_client):
-        app, client = app_and_client
+    def test_delete_expense_positive(self, setup):
+        BASE_URL, session = setup
 
-        app.expense_service.delete_expense.return_value = True
+        exp_submission_response = session.post(
+            BASE_URL,
+            json={
+                "amount": 100,
+                "description": "This is a test expense"
+            }
+        )
 
-        response = client.delete("/api/expenses/1")
+        exp_to_delete_id = exp_submission_response.json()["expense"]["id"]
 
-        assert response.status_code == 200
-        assert response.get_json()["message"] == "Expense deleted successfully"
+        exp_deletion_response = session.delete(
+            BASE_URL + f"/{exp_to_delete_id}"
+        )
 
-        app.expense_service.delete_expense.assert_called_once_with(1, 1)
+        assert exp_deletion_response.status_code == 200
+
+        data = exp_deletion_response.json()
+        assert data["message"] == "Expense deleted successfully"
 
     # EI-211
-    def test_delete_expense_negative(self, app_and_client):
-        app, client = app_and_client
+    def test_delete_expense_negative(self, setup):
+        BASE_URL, session = setup
 
-        app.expense_service.delete_expense.return_value = False
+        exp_deletion_response = session.delete(
+            BASE_URL + "/404"
+        )
 
-        response = client.delete("/api/expenses/400")
+        assert exp_deletion_response.status_code == 404
 
-        assert response.status_code == 404
-        assert response.get_json()["error"] == "Expense not found"
-
-        app.expense_service.delete_expense.assert_called_once_with(400, 1)
+        data = exp_deletion_response.json()
+        assert data["error"] == "Expense not found"
