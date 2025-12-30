@@ -92,22 +92,6 @@ public class TestGetAllExpenses {
       .executeUpdate();
   }
 
-  // Maybe bug?
-  @DisplayName("Get All Expense, Not Logged In")
-  @Test
-  public void getAllExpensesNotLoggedIn(){
-    given()
-      .spec(requestSpec)
-    .when()
-      .get("/api/expenses")
-    .then()
-      .spec(responseSpec)
-      .statusCode(200)
-      .body("success", equalTo(true))
-      .body("count", equalTo(3))
-      .body("data.expense.id", hasItems(901, 902, 903));
-  }
-
   @DisplayName("Get All Expense, Logged In")
   @Test
   public void getAllExpensesLoggedIn() {
@@ -117,7 +101,7 @@ public class TestGetAllExpenses {
           "password":"password123"
       }
       """;
-    Response response1 =
+    Response authResponse =
       given()
         .spec(requestSpec)
         .body(credentials)
@@ -127,7 +111,7 @@ public class TestGetAllExpenses {
         .spec(responseSpec)
         .statusCode(200)
         .extract().response();
-    String jwtCookie = response1.getCookie("jwt");
+    String jwtCookie = authResponse.getCookie("jwt");
 
     given()
         .spec(requestSpec)
@@ -140,5 +124,21 @@ public class TestGetAllExpenses {
         .body("success", equalTo(true))
         .body("count", equalTo(3))
         .body("data.expense.id", hasItems(901, 902, 903));
+  }
+
+  // Maybe bug? Should be Protected
+  @DisplayName("Get All Expense, Not Logged In")
+  @Test
+  public void getAllExpensesNotLoggedIn() {
+    given()
+      .spec(requestSpec)
+    .when()
+      .get("/api/expenses")
+    .then()
+      .spec(responseSpec)
+      .statusCode(200)
+      .body("success", equalTo(true))
+      .body("count", equalTo(3))
+      .body("data.expense.id", hasItems(901, 902, 903));
   }
 }

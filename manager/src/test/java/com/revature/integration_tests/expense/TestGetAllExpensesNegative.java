@@ -10,13 +10,11 @@ import io.restassured.specification.ResponseSpecification;
 import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-public class TestGetAllExpensesEmpty {
+public class TestGetAllExpensesNegative {
   static RequestSpecification requestSpec;
   static ResponseSpecification responseSpec;
   private static Connection connection;
@@ -49,7 +47,7 @@ public class TestGetAllExpensesEmpty {
           "password":"password123"
       }
       """;
-    Response response1 =
+    Response authResponse =
       given()
         .spec(requestSpec)
         .body(credentials)
@@ -59,17 +57,17 @@ public class TestGetAllExpensesEmpty {
         .spec(responseSpec)
         .statusCode(200)
         .extract().response();
-    String jwtCookie = response1.getCookie("jwt");
+    String jwtCookie = authResponse.getCookie("jwt");
 
     given()
-        .spec(requestSpec)
-        .cookie("jwt", jwtCookie)
-      .when()
-        .get("/api/expenses")
-      .then()
-        .spec(responseSpec)
-        .statusCode(200)
-        .body("success", equalTo(true))
-        .body("count", equalTo(0));
-  }
+      .spec(requestSpec)
+      .cookie("jwt", jwtCookie)
+    .when()
+      .get("/api/expenses")
+    .then()
+      .spec(responseSpec)
+      .statusCode(200)
+      .body("success", equalTo(true))
+      .body("count", equalTo(0));
+}
 }
