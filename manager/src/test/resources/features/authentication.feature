@@ -17,8 +17,8 @@ Scenario: Successful Login
 
 Scenario Outline: Invalid Login
   Given the manager is on the login screen
-  When the manager enters username <username>
-  And the manager enters password <password>
+  When the manager enters username "<username>"
+  And the manager enters password "<password>"
   And the manager clicks the login button
   Then the manager is not redirected to the dashboard
   And the manager sees the message: "Invalid credentials or user is not a manager"
