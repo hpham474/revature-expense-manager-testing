@@ -23,34 +23,34 @@ public abstract class BasePage {
     }
 
     // Wait for element to be visible and return it
-    protected WebElement waitForElement(By locator) {
+    public WebElement waitForElement(By locator) {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
     // Wait for element to be clickable and return it
-    protected WebElement waitForClickable(By locator) {
+    public WebElement waitForClickable(By locator) {
         return wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
 
     // Click with wait
-    protected void click(By locator) {
+    public void click(By locator) {
         waitForClickable(locator).click();
     }
 
     // Type with wait and clear
-    protected void type(By locator, String text) {
+    public void type(By locator, String text) {
         WebElement element = waitForElement(locator);
         element.clear();
         element.sendKeys(text);
     }
 
     // Get text with wait
-    protected String getText(By locator) {
+    public String getText(By locator) {
         return waitForElement(locator).getText();
     }
 
     // Check if element is displayed
-    protected boolean isDisplayed(By locator) {
+    public boolean isDisplayed(By locator) {
         try {
             return driver.findElement(locator).isDisplayed();
         } catch (NoSuchElementException e) {
