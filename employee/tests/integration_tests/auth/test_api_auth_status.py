@@ -1,24 +1,58 @@
 import pytest
-import requests
-import allure
-import sys
 import os
 
+from src.main import create_app
+from src.repository import DatabaseConnection
 
-BASE_URL = "http://127.0.0.1:5000"
+BASE_URL = "http://127.0.0.1:5000/"
+TEST_DB_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    "../../test_db/test_expense_manager.db"
+))
+SEED_SQL_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    "../../sql/seed.sql"
+))
+
+@pytest.fixture()
+def test_client():
+    # Ensure test DB directory exists
+    os.makedirs(os.path.dirname(TEST_DB_PATH), exist_ok=True)
+
+    # Set DB path BEFORE app creation
+    os.environ["DATABASE_PATH"] = TEST_DB_PATH
+
+    # Initialize schema once
+    db = DatabaseConnection()
+    db.initialize_database()
+
+    app = create_app()
+    app.config["TESTING"] = True
+
+    with app.test_client() as client:
+        yield client
+
+@pytest.fixture
+def setup_database(test_client):
+    """
+    Reset database state before each test and reseed.
+    Depends on test_client to guarantee schema exists.
+    """
+    db = DatabaseConnection()
+
+    with db.get_connection() as conn:
+        conn.execute("DELETE FROM approvals")
+        conn.execute("DELETE FROM expenses")
+        conn.execute("DELETE FROM users")
+
+        with open(SEED_SQL_PATH, "r") as f:
+            conn.executescript(f.read())
+
+        conn.commit()
+
+    yield
 
 class TestAuthenticationAPI:
-
-    @pytest.fixture
-    def api_session(self):
-        """Creates a requests session for API testing.
-
-        A session maintains cookies across requests,
-        which is needed for JWT authentication."""
-        session = requests.Session()
-        yield session
-        session.close()
-
     @pytest.fixture
     def valid_credentials(self):
         """Valid employee credentials for testing."""
@@ -39,45 +73,45 @@ class TestAuthenticationAPI:
 
     #Status tests
 
-    def test_status_unauthenticated(self, api_session):
+    def test_status_unauthenticated(self, test_client, setup_database):
         # Test auth status when not logged in.
         #Arrange
-        url = f"{BASE_URL}/api/auth/status"
+        url = "/api/auth/status"
         #Act
-        response = api_session.get(url)
+        response = test_client.get(url)
         #Assert
         assert response.status_code == 200
-        json_response = response.json()
+        json_response = response.get_json()
         assert json_response.get("authenticated") is False
 
-    def test_status_authenticated_valid_cred(self, api_session, valid_credentials):
+    def test_status_authenticated_valid_cred(self, test_client, setup_database, valid_credentials):
         # Test auth status when logged in.
         #Arrange login and status
-        login_url = f"{BASE_URL}/api/auth/login"
-        status_url = f"{BASE_URL}/api/auth/status"
+        login_url = "/api/auth/login"
+        status_url = "/api/auth/status"
 
         #Act+Assert for login
-        login_response = api_session.post(login_url, json=valid_credentials)
+        login_response = test_client.post(login_url, json=valid_credentials)
         assert login_response.status_code == 200
 
         #Act+Assert for status
-        status_response = api_session.get(status_url)
+        status_response = test_client.get(status_url)
         assert status_response.status_code == 200
-        data = status_response.json()
+        data = status_response.get_json()
         assert data["authenticated"] is True
         assert valid_credentials["username"] == "employee1"
         assert valid_credentials["password"] == "password123"
         assert valid_credentials["role"] == "employee"
 
 
-    def test_status_invalid_cred(self, invalid_credentials, api_session):
-        login_url = f"{BASE_URL}/api/auth/login"
-        status_url = f"{BASE_URL}/api/auth/status"
+    def test_status_invalid_cred(self, test_client, setup_database, invalid_credentials):
+        login_url = "/api/auth/login"
+        status_url = "/api/auth/status"
 
-        api_session.post(login_url, json=invalid_credentials)
-        response = api_session.get(status_url)
+        test_client.post(login_url, json=invalid_credentials)
+        response = test_client.get(status_url)
         assert response.status_code == 200
-        json_response = response.json()
+        json_response = response.get_json()
         assert json_response.get("authenticated") is False
 
 
