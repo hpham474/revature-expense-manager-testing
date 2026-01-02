@@ -1,16 +1,24 @@
 package com.revature.end_to_end_tests.steps;
 
+import com.revature.end_to_end_tests.hooks.Hooks;
 import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.openqa.selenium.WebDriver;
 
 public class AuthSteps {
+    private static WebDriver driver;
+    String BASE_URL = "http://localhost:5001/";
+
     @Given("the application is running")
     public void theApplicationIsRunning() {
         // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+        driver = Hooks.getDriver();
+        driver.get(BASE_URL);
+        String title = driver.getTitle();
+        System.out.println(title);
     }
 
     @And("the test database is already seeded with users")
