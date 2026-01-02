@@ -1,79 +1,80 @@
-import sqlite3
-import requests
+import os
 import pytest
+from src.main import create_app
+from src.repository import DatabaseConnection
 
-BASE_URL = "http://127.0.0.1:5000/"
+TEST_DB_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    "../../test_db/test_expense_manager.db"
+))
+SEED_SQL_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    "../../sql/seed.sql"
+))
+
+@pytest.fixture()
+def test_client():
+    # Ensure test DB directory exists
+    os.makedirs(os.path.dirname(TEST_DB_PATH), exist_ok=True)
+
+    # Set DB path BEFORE app creation
+    os.environ["DATABASE_PATH"] = TEST_DB_PATH
+
+    # Initialize schema once
+    db = DatabaseConnection()
+    db.initialize_database()
+
+    app = create_app()
+    app.config["TESTING"] = True
+
+    with app.test_client() as client:
+        yield client
 
 @pytest.fixture
-def db_conn():
-  conn = sqlite3.connect("expense_manager.db")
-  conn.row_factory = sqlite3.Row
-  yield conn
-  conn.close()
+def setup_database(test_client):
+    """
+    Reset database state before each test and reseed.
+    Depends on test_client to guarantee schema exists.
+    """
+    db = DatabaseConnection()
 
-@pytest.fixture
-def setup_database(db_conn):
-  cursor = db_conn.cursor()
+    with db.get_connection() as conn:
+        conn.execute("DELETE FROM approvals")
+        conn.execute("DELETE FROM expenses")
+        conn.execute("DELETE FROM users")
 
-  cursor.execute("""
-    INSERT INTO users (id, username, password, role)
-    VALUES
-      (997, 'employee997', 'password123', 'Employee'),
-      (998, 'employee998', 'password123', 'Employee'),
-      (999, 'manager999',  'password123', 'Manager')
-  """)
+        with open(SEED_SQL_PATH, "r") as f:
+            conn.executescript(f.read())
 
-  cursor.execute("""
-    INSERT INTO expenses (id, user_id, amount, description, date)
-    VALUES
-      (901, 997, 25.50,  'Lunch with client', '2025-01-05'),
-      (902, 997, 120.00, 'Hotel stay',        '2025-01-06'),
-      (903, 998, 15.75,  'Taxi to office',    '2025-01-07')
-  """)
+        conn.commit()
 
-  cursor.execute("""
-    INSERT INTO approvals (id, expense_id, status, reviewer, comment, review_date)
-    VALUES
-      (801, 901, 'pending', NULL, NULL, NULL),
-      (802, 902, 'pending', NULL, NULL, NULL),
-      (803, 903, 'pending', NULL, NULL, NULL)
-  """)
+    yield
 
-  db_conn.commit()
-
-  yield
-
-  cursor.execute("DELETE FROM approvals WHERE id IN (801, 802, 803)")
-  cursor.execute("DELETE FROM expenses WHERE id IN (901, 902, 903)")
-  cursor.execute("DELETE FROM users WHERE id IN (997, 998, 999)")
-  db_conn.commit()
-
-def test_update_expense(setup_database):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
+def test_update_expense(setup_database, test_client):
+  auth_response = test_client.post(
+    "/api/auth/login",
     json={
-      "username": "employee997",
+      "username": "employee1",
       "password": "password123"
     }
   )
 
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
-  expense_id = 901
+  expense_id = 1
 
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/{expense_id}",
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
     json={
       "amount": 99.99,
       "description": "Updated lunch",
       "date": "2025-01-06"
-    },
-    cookies=cookie
+    }
   )
 
   assert response.status_code == 200
 
-  data = response.json()
+  data = response.get_json()
   assert data["expense"]["amount"] == 99.99
   assert data["expense"]["description"] == "Updated lunch"
   assert data["message"] == "Expense updated successfully"
@@ -83,134 +84,130 @@ def test_update_expense(setup_database):
   ("99.99",None,"2025-01-06"),
   ("99.99","Updated lunch",None)
 ])
-def test_update_expense_missing_parameter(setup_database, amount, description, date):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
+def test_update_expense_missing_parameter(setup_database, amount, description, date, test_client):
+  auth_response = test_client.post(
+    "/api/auth/login",
     json={
-      "username": "employee997",
+      "username": "employee1",
       "password": "password123"
     }
   )
 
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
-  expense_id = 901
+  expense_id = 1
 
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/{expense_id}",
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
     json={
       "amount": amount,
       "description": description,
       "date": date
-    },
-    cookies=cookie
+    }
   )
 
   assert response.status_code == 400
 
-  data = response.json()
+  data = response.get_json()
   assert data["error"] == "Amount, description, and date are required"
 
 @pytest.mark.parametrize("amount, description, date", [
   ("abc","Updated lunch","2025-01-06"),
   ("3/4","Updated lunch","2025-01-06"),
 ])
-def test_update_expense_invalid_amount(setup_database, amount, description, date):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
+def test_update_expense_invalid_amount(setup_database, amount, description, date, test_client):
+  auth_response = test_client.post(
+    "/api/auth/login",
     json={
-      "username": "employee997",
+      "username": "employee1",
       "password": "password123"
     }
   )
 
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
-  expense_id = 901
+  expense_id = 1
 
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/{expense_id}",
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
     json={
       "amount": amount,
       "description": description,
       "date": date
-    },
-    cookies=cookie
+    }
   )
 
   assert response.status_code == 400
 
-  data = response.json()
+  data = response.get_json()
   assert data["error"] == "Amount must be a valid number"
 
-def test_update_expense_missing_expense_id(setup_database):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
+def test_update_expense_missing_expense_id(setup_database, test_client):
+  auth_response = test_client.post(
+  f"/api/auth/login",
     json={
-      "username": "employee997",
+      "username": "employee1",
       "password": "password123"
     }
   )
 
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
   expense_id = 9999
 
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/{expense_id}",
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
     json={
       "amount": 99.99,
       "description": "Updated lunch",
       "date": "2025-01-06"
-    },
-    cookies=cookie
+    }
   )
 
   assert response.status_code == 404
 
-  data = response.json()
+  data = response.get_json()
   assert data["error"] == "Expense not found"
 
-def test_update_expense_missing_json(setup_database):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
+def test_update_expense_missing_json(setup_database, test_client):
+  auth_response = test_client.post(
+    "/api/auth/login",
     json={
-      "username": "employee997",
+      "username": "employee1",
       "password": "password123"
     }
   )
 
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
-  expense_id = 901
+  expense_id = 1
 
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/{expense_id}",
-    json={},
-    cookies=cookie
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
+    json={}
   )
 
   assert response.status_code == 400
 
-  data = response.json()
+  data = response.get_json()
   assert data["error"] == "JSON data required"
 
-def test_update_expense_not_owner(setup_database):
-  auth_response = requests.post(
-    f"{BASE_URL}/api/auth/login",
-    json={"username": "employee997", "password": "password123"}
+def test_update_expense_not_owner(setup_database, test_client):
+  auth_response = test_client.post(
+    "/api/auth/login",
+    json={"username": "employee1", "password": "password123"}
   )
-  cookie = auth_response.cookies
+  assert auth_response.status_code == 200
 
-  # Expense 903 belongs to employee998
-  response = requests.put(
-    f"{BASE_URL}/api/expenses/903",
+  # Expense 4 belongs to employee2
+  expense_id = 4
+  response = test_client.put(
+    f"/api/expenses/{expense_id}",
     json={
       "amount": 10.0,
       "description": "Hack attempt",
       "date": "2025-01-06"
-    },
-    cookies=cookie
+    }
   )
 
   assert response.status_code == 404
