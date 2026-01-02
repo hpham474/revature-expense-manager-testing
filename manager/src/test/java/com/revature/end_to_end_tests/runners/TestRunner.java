@@ -12,7 +12,7 @@ import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
 @ConfigurationParameter(
-        key=GLUE_PROPERTY_NAME,value="com.revature.end_to_end_tests.steps"
+        key=GLUE_PROPERTY_NAME,value="com.revature.end_to_end_tests"
 )
 
 public class TestRunner {

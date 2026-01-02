@@ -1,6 +1,8 @@
 package com.revature.end_to_end_tests.steps;
 
+import com.revature.end_to_end_tests.context.TestContext;
 import com.revature.end_to_end_tests.hooks.Hooks;
+import com.revature.end_to_end_tests.pages.LoginPage;
 import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -8,17 +10,24 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.openqa.selenium.WebDriver;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class AuthSteps {
-    private static WebDriver driver;
-    String BASE_URL = "http://localhost:5001/";
+    TestContext context;
+    LoginPage loginPage;
+
+    public AuthSteps(){
+        context = TestContext.getInstance();
+    }
 
     @Given("the application is running")
     public void theApplicationIsRunning() {
         // Write code here that turns the phrase above into concrete actions
-        driver = Hooks.getDriver();
-        driver.get(BASE_URL);
-        String title = driver.getTitle();
-        System.out.println(title);
+        loginPage = context.getLoginPage();
+        loginPage.navigateTo("/");
+        String currentUrl = loginPage.getCurrentUrl();
+        System.out.println(currentUrl);
+        assertTrue(currentUrl.contains("5001"));
     }
 
     @And("the test database is already seeded with users")
