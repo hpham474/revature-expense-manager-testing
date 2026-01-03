@@ -98,6 +98,7 @@ public class ReviewExpenseSteps {
     @And("the manager clicks the all expenses button")
     public void theManagerClicksTheAllExpensesButton() {
         dashboardPage = context.dashboardPage();
+        dashboardPage.click(By.id("cancel-review"));
         dashboardPage.goToAllExpensesScreen();
     }
 

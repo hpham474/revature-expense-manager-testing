@@ -42,7 +42,7 @@ public class DashboardPage extends BasePage{
     }
 
     public LoginPage logout(){
-        wait.until(ExpectedConditions.visibilityOf(logoutButton));
+        wait.until(ExpectedConditions.elementToBeClickable(logoutButton));
         logoutButton.click();
         return new LoginPage(this.driver);
     }
