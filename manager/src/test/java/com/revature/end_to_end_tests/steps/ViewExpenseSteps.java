@@ -66,7 +66,8 @@ public class ViewExpenseSteps {
 
     @Then("the manager is shown {string} expenses for user {string}")
     public void theManagerIsShownCountExpensesForUserId(String arg0, String arg1) {
-        List<WebElement> rows = driver.findElements(By.tagName("tr"));
+//        List<WebElement> rows = driver.findElements(By.tagName("tr")); “//input[@id=’username’]”
+        List<WebElement> rows = driver.findElements(By.xpath("//td[text()='employee" + arg1 + " (ID: " + arg1 + ")']"));
         assertEquals(rows.size(), Integer.parseInt(arg0) + 1);
     }
 
