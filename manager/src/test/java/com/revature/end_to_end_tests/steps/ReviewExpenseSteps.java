@@ -108,10 +108,10 @@ public class ReviewExpenseSteps {
 
         if(status.equals("Approve"))
             expectedStatus = "APPROVED";
-        else if(status.equals("Denied"))
+        else if(status.equals("Deny"))
             expectedStatus = "DENIED";
         else
-            fail("Status is not approved or denied");
+            fail("Status is not approve or deny");
         if(comment == null || comment.isEmpty())
             expectedComment = "-";
         else
