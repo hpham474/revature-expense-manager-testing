@@ -18,8 +18,8 @@ public class ReviewExpenseSteps {
     TestContext context;
     DashboardPage dashboardPage;
 
-    public ReviewExpenseSteps(){
-        context = TestContext.getInstance();
+    public ReviewExpenseSteps(TestContext context){
+        this.context = context;
     }
 
     @Given("the manager is on the pending expenses screen")
