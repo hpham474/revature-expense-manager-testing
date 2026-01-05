@@ -199,8 +199,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.2</version>
                 <configuration>
-                    <!-- Suppresses warnings -->
-                    <argLine>--enable-native-access=ALL-UNNAMED</argLine>
                     <!-- Puts allure-results into the target folder -->
                     <systemPropertyVariables>
                         <allure.results.directory>
