@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -108,27 +110,48 @@ public class ReportSteps {
 
     @When("the manager inputs {string} into the start date field")
     public void theManagerInputsIntoTheStartDateField(String startDate) {
-        WebDriverWait wait = new WebDriverWait(context.getDriver(), Duration.ofSeconds(10));
 
+        WebDriverWait wait = new WebDriverWait(context.getDriver(), Duration.ofSeconds(10));
         WebElement startDateField = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(By.id("start-date"))
         );
+
+        // Handle keyword values
+        if (startDate.equalsIgnoreCase("today")) {
+            startDate = LocalDate.now()
+                    .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+        }
+
         startDateField.clear();
         startDateField.sendKeys(startDate);
 
+        // Ensure value is set before continuing
+        wait.until(driver ->
+                startDateField.getAttribute("value").length() > 0
+        );
     }
 
     @And("the manager inputs {string} into the end date field")
     public void theManagerInputsIntoTheEndDateField(String endDate) {
-        WebDriverWait wait = new WebDriverWait(context.getDriver(), Duration.ofSeconds(10));
 
+        WebDriverWait wait = new WebDriverWait(context.getDriver(), Duration.ofSeconds(10));
         WebElement endDateField = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(By.id("end-date"))
         );
+
+        if (endDate.equalsIgnoreCase("today")) {
+            endDate = LocalDate.now()
+                    .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+        }
+
         endDateField.clear();
         endDateField.sendKeys(endDate);
 
+        wait.until(driver ->
+                endDateField.getAttribute("value").length() > 0
+        );
     }
+
     @When("the manager clicks the {string} report button")
     public void theManagerClicksTheReport(String reportType) {
 

@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -306,31 +307,20 @@ public class TestExpenseService {
     })
     void escapeCsvValue_negativeCases(String input, String expected) {
 
-        // Expense
         Expense expense = new Expense();
         expense.setId(1);
         expense.setAmount(10.00);
         expense.setDescription(input);
         expense.setDate("2025-01-01");
 
-        // User (THIS was missing)
         User user = new User();
         user.setUsername("testuser");
 
-        // Approval (if accessed, keep non-null)
         Approval approval = new Approval();
         approval.setStatus("APPROVED");
 
         ExpenseWithUser e1 = new ExpenseWithUser(expense, user, approval);
-
-        // Act
+        //Act
         String csv = expenseService.generateCsvReport(List.of(e1));
-
-        // Assert – value should NOT be escaped
-        assertTrue(csv.contains(expected));
+        assertTrue(csv.contains(expected));}
     }
-
-
-
-
-}

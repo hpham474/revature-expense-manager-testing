@@ -44,7 +44,7 @@ Scenario: Category Report
 
 Scenario: Date Range Report
   Given the manager is on the generate reports screen
-  When the manager inputs "2025-01-01" into the start date field
-  And the manager inputs "2025-12-31" into the end date field
+  When the manager inputs "01/01/2025" into the start date field
+  And the manager inputs "12/31/2025" into the end date field
   And the manager clicks the "Generate Date Range Report" report button
   Then a report is downloaded, and a "Report generated successfully!" message is shown
