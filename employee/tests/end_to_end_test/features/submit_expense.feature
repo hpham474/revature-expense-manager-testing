@@ -10,19 +10,20 @@ Background:
 
 Scenario Outline: Successful expense submit
   Given the employee is at the submit expense menu
-  When the employee inputs a new amount: <amount>
-  And the employee inputs a new description: <description>
-  And the employee inputs a new date: <date>
+  When the employee inputs a new amount: "<amount>"
+  And the employee inputs a new description: "<description>"
+  And the employee inputs a new date: "<date>"
   And the employee clicks the submit expense button
   Then the employee sees the message: "Expense submitted successfully!"
-  And the expense is shown with the the amount: <amount>, description: <description>, and the date: <date>
+  And the employee navigates to the expenses screen
+  And the expense is shown with the amount: "<amount>", description: "<description>", and the date: "<date>"
 
   Examples:
-    | amount      | description          | date                 |
-    | 123         | example description  | 2025-12-30           |
-    | 999         | fix door             | 2025-10-10           |
+    | amount | description         | date       |
+    | 123    | example description | 2025-12-31 |
+    | 999    | fix door            | 2025-01-01 |
 
-Scenario: Submit expense with empty amount
+  Scenario: Submit expense with empty amount
   Given the employee is at the submit expense menu
   When the amount field is empty
   And the employee clicks the submit expense button
@@ -40,6 +41,8 @@ Scenario: Submit expense with empty description
 Scenario: Submit expense without inputting date
   Given the employee is at the submit expense menu
   When the employee inputs a new amount: "100"
-  And the employee inputs a new description: "today's date"
+  And the employee inputs a new description: "todays date"
   And the employee clicks the submit expense button
-  Then an expense with today's date, amount: "100" and description: "today's date" is shown
+  Then the employee sees the message: "Expense submitted successfully!"
+  And the employee navigates to the expenses screen
+  And an expense with today's date, amount: "100" and description: "todays date" is shown
